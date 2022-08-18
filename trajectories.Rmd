@@ -51,7 +51,7 @@ df.rte <- readRDS("data/df_rte.rds")
 
 ## Introduction
 
-This write-up describes an exploration of the `STPtrajectories` package.  This package includes an implementation of Miller's space-time prism.
+This write-up includes an investigation into trajectory mining with spatio-temporal data, primarily with techniques derived from [Miller's space-time prisms](https://cpb-us-w2.wpmucdn.com/u.osu.edu/dist/a/390/files/2017/03/Miller-time-geography-and-space-time-prism-1rp3u1q.pdf) (STPs) and implemented with the `STPtrajectories` [R package](https://github.com/markvregel/STPtrajectories).   
 
 
 ```{r, eval=FALSE, echo=FALSE}
@@ -66,9 +66,8 @@ devtools::install_github("markvregel/STPtrajectories",build_vignettes=FALSE)
 
 A simulated dataset is generated from the travel route between Portland, OR and Portland, ME.  City coordinates are obtained from OpenStreetMap via `osmdata` and the route between cities from `osrm`.  Five hundred imaginary trips are simulated from this route by sampling from a Normal distribution with centroid value being the point coordinates.  The resulting point cloud is displayed below, with the original path depicted as a black line.
 
-<details>
-<summary style="font-size:15px">CODE</summary>
-```{r, message=FALSE, warning=FALSE, eval=FALSE}
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, eval=FALSE}
 
 # Coords for  Portland, OR
 pdx <- osmdata::getbb("Portland, OR", format_out="sf_polygon") 
@@ -105,11 +104,8 @@ for (i in 2:nrow(df.rte)) {
 
 saveRDS(df.rte, "data/df_rte.rds")
 ```
-</details>
 
-<details>
-<summary style="font-size:15px">CODE</summary>
-```{r, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Simulate some data
 epsg_code <- spaceheater::get_epsg(df.rte$pt)
 df.rte1 <- df.rte %>% mutate(pt1 = pt %>% sf::st_transform(epsg_code))
@@ -133,7 +129,7 @@ df.dat <- do.call(rbind,d) %>%
          hex = h3::geo_to_h3(c(lat,lon), res=3)) %>%
   arrange(idx_tr,idx_pt) 
 ```
-</details>
+
 
 <br>
 
@@ -151,13 +147,13 @@ df.tmp <- df.dat %>%
   summarise(ln = make_line(sf::st_coordinates(pt)) %>% sf::st_sfc(crs=4326))
 p1 <- df.dat %>% #df.tmp[sample(nrow(df.tmp),10),] %>%
   ggplot() +
-  geom_sf(data=us, mapping=aes(geometry=geometry), fill="grey99", color="grey75", size=0.2) +
+  geom_sf(data=us, mapping=aes(geometry=geometry), fill="cornsilk", color="grey75", size=0.2) +
   geom_sf(aes(geometry=pt), alpha=0.3, color="grey65", size=0.5) +
   geom_sf(data=ln, aes(geometry=geometry)) +
   theme_void()
 
 # p <- ggplot(data = us_states_cont) +
-#   geom_sf(fill = "grey99", color = "grey80", size=0.2) +
+#   geom_sf(fill = "cornsilk", color = "grey80", size=0.2) +
 #   theme_void()
 #
 # Plot a hex representation of all the simulated points
@@ -168,7 +164,7 @@ df.hex <- df.dat %>%
   mutate(geometry = h3::h3_to_geo_boundary_sf(hex) %>% pull(geometry)) #%>%
 p2 <- df.hex %>% 
   ggplot() +
-  geom_sf(data=us, mapping=aes(geometry=geometry), fill="grey99", color="grey75", size=0.2) +
+  geom_sf(data=us, mapping=aes(geometry=geometry), fill="cornsilk", color="grey75", size=0.2) +
   geom_sf(aes(geometry=geometry, fill=n),color=NA) + 
   scale_fill_gradient(low="grey75",high="firebrick", guide="none") +
   theme_void()
@@ -182,17 +178,14 @@ p1
 ```
 
 <br>
-
-
 <br>
 
 ## Monte Carlo from scratch
 
 We can use the 500 imaginary trips to estimate the original route via monte carlo.  To do this, we aggregate the point data by geohash (via the `h3` package), and the model uses the _current_ geohash to predict the _next_ geohash.  The "model" in this case is really just a collection of geohash-pairs plus the number of times this pair was seen in the data.  To carry out the monte carlo process, we start at one end of the route and randomly sample from geohash pairs to determine the next grid location, until the process is completed (ie: we have arrived at the other end of the route, or some maximum number of iterations has been reached).  The procedure is repeated many times so that we have a collection of paths.
 
-<details>
-<summary style="font-size:15px">CODE</summary>
-```{r, warning=FALSE, message=FALSE}
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 # Create hex pairs: hex to next-hex
 model_stuff <- function(df) {
   df %>% rename(hex0=hex) %>%
@@ -209,11 +202,8 @@ df.mod <- df.dat %>%
   summarise(w = sum(n)) %>%
   ungroup()
 ```
-</details>
 
-<details>
-<summary style="font-size:15px">CODE</summary>
-```{r, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 
 # Pick the next hex based on the present hex
 random_picker <- function(hex, df.model) {
@@ -248,30 +238,26 @@ my_monte_carlo <- function(start, max_iter, df.model) {
            pt = sf::st_centroid(geometry))
 }
 ```
-</details>
 
-<details>
-<summary style="font-size:15px">CODE</summary>
-```{r, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Get a random start point
 fstart <- sample(start_points$hex, 1, prob=start_points$r) 
 df.mte <- my_monte_carlo(fstart, max_iter=30, df.mod)
 ln2 <- df.mte %>% pull(pt) %>% sf::st_coordinates() %>% make_line() %>% sf::st_sfc(crs=4326)
 ```
-</details>
+
 
 ```{r, echo=FALSE, out.width="40%", fig.align="center"}
 px <- ggplot() +
-  geom_sf(data=us, mapping=aes(geometry=geometry), fill="grey99", color="grey75", size=0.2) +
+  geom_sf(data=us, mapping=aes(geometry=geometry), fill="cornsilk", color="grey75", size=0.2) +
   geom_sf(data=ln, aes(geometry=geometry)) +
   geom_sf(data=ln2, aes(geometry=geometry), color="firebrick", alpha=0.5, size=0.5) +
   theme_void() 
 ```
 
 
-<details>
-<summary style="font-size:15px">CODE</summary>
-```{r, message=FALSE, warning=FALSE}
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 N <- 10
 fstart <- sample(start_points$hex, N, prob=start_points$r) 
 dd <- lapply(1:N, function(i) {
@@ -281,7 +267,7 @@ df.mte2 <- do.call(rbind,dd) %>%
   group_by(nn) %>%
   summarise(ln = sf::st_coordinates(pt) %>% make_line() %>% sf::st_sfc(crs=4326))
 ```
-</details>
+
 
 ```{r, echo=FALSE, out.width="48%", fig.align="center"}
 py <- px + geom_sf(data=df.mte2, aes(geometry=ln), color="firebrick", alpha=0.3, size=0.5)
@@ -294,9 +280,8 @@ py
 
 More interesting than the gross monte carlo results described above is a determination of the "next-hex probabilities".  In other words, given some current position, what does the probability distribution look like for each of the surrounding positions?  This is fairly straightforward to implement with the model developed in the section above.  In the example below, the current-hex is depicted in black, and the next-hex probabilities are represented by fill color in the surrounding geohashes, 
 
-<details>
-<summary style="font-size:15px">CODE</summary>
-```{r}
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 set.seed(1234)
 fstart <- sample(start_points$hex, 1, prob=start_points$r) 
 dfx <- df.mod %>% filter(hex0==fstart) 
@@ -305,12 +290,12 @@ dfx$z <- dfx$w/sum(dfx$w)
 df.prb <- dfx %>%
   mutate(geometry = h3::h3_to_geo_boundary_sf(hex1) %>% pull(geometry))
 ```
-</details>
+
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, out.width="48%", fig.align="center"}
 hex0 <- df.prb$hex0 %>% unique()
 p.prb <- ggplot() +
-  geom_sf(data=us, mapping=aes(geometry=geometry), fill="grey99", color="grey75", size=0.2) +
+  geom_sf(data=us, mapping=aes(geometry=geometry), fill="cornsilk", color="grey75", size=0.2) +
   geom_sf(data=df.hex, aes(geometry=geometry),fill="grey95",color=NA) +
   geom_sf(data=df.prb, aes(geometry=geometry, fill=z), color="grey99",size=0.1) +
   geom_sf(data=df.hex %>% filter(hex==hex0), aes(geometry=geometry), fill="grey10") +
@@ -321,15 +306,17 @@ p.prb
 ```
 
 
+## Miller's Space-Time Prisms
 
-
-## Using `STPtrajectories`
+> The space–time prism (STP) highlights the influence of space–time anchors on the ability to
+> participate in flexible activities. The STP is the
+> envelope of all possible space–time paths between
+> known locations and times.
 
 The R package [STPtrajectories](https://github.com/markvregel/STPtrajectories) includes an implementation of [Miller's space time prism](https://cpb-us-w2.wpmucdn.com/u.osu.edu/dist/a/390/files/2017/03/Miller-time-geography-and-space-time-prism-1rp3u1q.pdf) as well as some related features like a random trajectory generator, potential path area, and the alibi query.  Using the package [vignette](http://htmlpreview.github.io/?https://raw.githubusercontent.com/markvregel/STPtrajectories/master/vignettes/STP_Tracks.html) as a guide, we illustrate each of these features here within the context of the example above.
 
-<details>
-<summary style="font-size:15px">CODE</summary>
-```{r, message=FALSE, warning=FALSE}
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ## Create a spacetime object from the route data
 
 # note: STPtrajectories uses sp and not sf
@@ -342,18 +329,18 @@ stidf_rte <- STIDF(sp_rte, df.rte$tm, df.rte)
 # max speed is 25 m/s (~56mph)
 track_rte <- STPtrajectories::STP_Track(Track(stidf_rte), 25)
 ```
-</details>
+
 
 ### Potential Path Area
 
-The potential path area (PPA) encompasses the region that can feasibly have been traversed between observed points, based on some maximum speed. Given a maximum average speed of around 25 m/s (~55 mph), the PPA for our path between Portlands is given in the chart below.   Notice that this looks quite different from the results presented above from the monte carlo simulation.  There is a good reason for this: the regions depicted operate on the assumption that data points represent observables and the regions represent how far an individual may have traveled between observed points, based on the maximum average speed between these points.  In contrast, the monte carlo results depicted above incorporate uncertainty on the observed positions, but ignore any variations between points.  In fact, these methods are complementary, in the sense that one might consider generating PPAs from the monte carlo paths, and then combining the results together into an overall path probability distribution.
+The potential path area (PPA) encompasses the region that can feasibly have been traversed between observed points, based on some maximum speed.  It is the spatial footprint of the space-time prism. Given a maximum average speed of around 25 m/s (~55 mph), the PPA for our path between Portlands is given in the chart below.   Notice that this looks quite different from the results presented above from the monte carlo simulation.  There is a good reason for this: the regions depicted operate on the assumption that data points represent observables and the regions represent how far an individual may have traveled between observed points, based on the maximum average speed between these points.  In contrast, the monte carlo results depicted above incorporate uncertainty on the observed positions, but ignore any variations between points.  In fact, these methods are complementary, in the sense that one might consider generating PPAs from the monte carlo paths, and then combining the results together into an overall path probability distribution.
 
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, out.width="48%", fig.align="center"}
 PPA_track_rte <- PPA(track_rte) %>% sf::st_as_sf() %>% sf::st_transform(4326)
 
 p.ppa <- ggplot() + 
-  geom_sf(data=us, mapping=aes(geometry=geometry), fill="grey99", color="grey75", size=0.2) +
+  geom_sf(data=us, mapping=aes(geometry=geometry), fill="cornsilk", color="grey75", size=0.2) +
   geom_sf(data=ln, aes(geometry=geometry)) +
   geom_sf(data=PPA_track_rte, mapping=aes(geometry=geometry), alpha=0.5, color="grey75") + theme_void()
 
@@ -363,12 +350,11 @@ p.ppa
 
 ### Random trajectory generator
 
-In the area chart above the region around the Great Lakes spans a large area because the "observed" points are spread further from one another.  This means that, at 55 mph, an individual can travel further afield between observed points.  Ignoring the presence or absence of roads, one can get an idea of the potential paths within this area with the random trajectory generator (RTG).  Here, we use the RTG to simulate 500 hypothetical paths around the Great Lakes region.  The results are displayed in the chart below.  Here, the paths are rendered as dots so that the result is effectively a dot-density map depicting the likelihood that an individual travel through a given location.  Note that the density is noticeably smaller further from the markers, which represent observed locations.
+In the area chart above the region around the Great Lakes spans a large area because the "observed" points are spread further from one another.  This means that, at 55 mph, an individual can travel further afield between observed points.  Ignoring the presence or absence of roads, one can get an idea of the potential paths within this area with the random trajectory generator (RTG).  The RTG uses a _directed random walk_ (ie: a random walk with directional bias) to generate a path between anchor points.  The chart below at left shows a single random trajectory generated to fill gaps between the "known" points.  We use this same process to simulate 500 hypothetical paths around the Great Lakes region, as displayed in the chart at right below.  Here, the paths are rendered as dots so that the result is effectively a dot-density map depicting the likelihood that an individual travel through a given location.  The result, according to Miller, is a bivariate multinomial distribution centered on each of the anchor points.  Note that the density is noticeably smaller further from the markers, which represent observed locations.
 
-<details>
-<summary style="font-size:15px">CODE</summary>
-```{r, message=FALSE, warning=FALSE, echo=FALSE}
-df.rte2 <- df.rte[19:22,]
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, echo=FALSE}
+df.rte2 <- df.rte[18:22,]
 sp_rte2 <- sf::as_Spatial(df.rte2$pt %>% sf::st_transform(epsg_code))
 stidf_rte2 <- STIDF(sp_rte2, df.rte2$tm, df.rte)
 track_rte2 <- STPtrajectories::STP_Track(Track(stidf_rte2), 25)
@@ -382,36 +368,51 @@ d <- lapply(1:500, function(i){
   #xy <- sf::st_coordinates(df$geometry)
   #xy_ln <- make_line(xy) 
 })
-#df.ln <- data.frame(ln = sf::st_as_sfc(d))
 df.rtg <- do.call(rbind,d)
-saveRDS(df.rtg, "data/df_rtg.rds")
-```
-</details>
 
-```{r, echo=FALSE, message=FALSE, warning=FALSE, out.width="48%", fig.align="center"}
-df.rtg <- readRDS("data/df_rtg.rds")
+d <- lapply(1:500, function(i){
+  STP_track_rte2 <- RTG(track_rte2, n_points = 10, iter=10)
+  df <- sf::st_as_sf(STP_track_rte2@sp) %>% sf::st_transform(4326)
+  xy <- sf::st_coordinates(df$geometry)
+  xy_ln <- make_line(xy) 
+})
+df.ln <- data.frame(ln = sf::st_as_sfc(d, crs=4326))
+
+saveRDS(df.rtg, "data/df_rtg_pt.rds")
+saveRDS(df.ln,  "data/df_rtg_ln.rds")
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, out.width="48%", fig.show="hold"}
+df.rtg1 <- readRDS("data/df_rtg_pt.rds")
+df.rtg2 <- readRDS("data/df_rtg_ln.rds")
 p.tst1 <- p.ppa + 
-  geom_sf(data=df.rtg, mapping=aes(geometry=geometry), color="firebrick", size=0.1, alpha=0.25) +
+  geom_sf(data=df.rtg1, mapping=aes(geometry=geometry), color="firebrick", size=0.1, alpha=0.25) +
   geom_sf(data=df.rte2, mapping=aes(geometry=pt), color="grey25")
+p.tst2 <- p.ppa + 
+  geom_sf(data=df.rtg2[100,], mapping=aes(geometry=geometry), color="firebrick", size=0.3) +
+  geom_sf(data=df.rte2, mapping=aes(geometry=pt), color="grey25")
+
+p.tst2
 p.tst1
 ```
 
 ### The Alibi Query
 
-The alibi query will help to determine when and where a potential meeting may have taken place between two travelers.  
+```{r, echo=FALSE, message=FALSE, warning=FALSE, eval=FALSE}
+## NOT RUN ##
+#  this chunk generates the route and saves a file to be read later
 
-```{r, message=FALSE, warning=FALSE, eval=FALSE}
-
-# Coords for  Portland, OR
+# Coords for  Fargo, ND
 mnp <- osmdata::getbb("Fargo, ND", format_out="sf_polygon") 
 pt_mnp <- mnp$geometry %>% sf::st_centroid() %>% sf::st_as_sf()
 
-# Coords for Portland, ME
+# Coords for Miami, FL
 mia <- osmdata::getbb("Miami, FL", format_out="sf_polygon")
 pt_mia <- mia$geometry %>% sf::st_centroid() %>% sf::st_as_sf()
 
-# Route from Portland to Portland
-tstart <- as.POSIXct("2022-07-01 09:00")
+# Route from Portland to Portland via osrm
+tstart <- as.POSIXct("2022-07-01 12:00")
 avg_spd <- 30 # km/h
 std_spd <- 10
 df.rte10 <- osrm::osrmRoute(src=pt_mnp, dst=pt_mia) %>%
@@ -419,8 +420,7 @@ df.rte10 <- osrm::osrmRoute(src=pt_mnp, dst=pt_mia) %>%
          dst = sf::st_distance(pt, lag(pt), by_element=TRUE),
          tm  = tstart)
 
-
-
+## Simulate timing
 for (i in 2:nrow(df.rte10)) {
     t_old <- df.rte10$tm[i-1]
     v <- rnorm(1, avg_spd, std_spd)
@@ -430,31 +430,36 @@ for (i in 2:nrow(df.rte10)) {
     v2 <- ifelse(v1 > 0, floor(x) + 1 + v1, x)
     HrMn = sub(".", ":", v2, fixed = TRUE) %>% hm()
     
+    
     df.rte10$tm[i] <- df.rte10$tm[i-1] + HrMn
     }
-  
 
-
+## save file  
 saveRDS(df.rte10, "data/df_rte10.rds")
 ```
 
 
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+## Read the file and convert to a Potential Path Area
 df.rte10 <- readRDS("data/df_rte10.rds")
-
 sp_rte10 <- sf::as_Spatial(df.rte10$pt %>% sf::st_transform(epsg_code))
 stidf_rte10 <- STIDF(sp_rte10, df.rte10$tm, df.rte10)
 track_rte10 <- STPtrajectories::STP_Track(Track(stidf_rte10), 20)
 PPA_track_rte10 <- PPA(track_rte10) %>% sf::st_as_sf() %>% sf::st_transform(4326)
+
+# df.rte2 <- df.rte[18:22,]
+# sp_rte2 <- sf::as_Spatial(df.rte2$pt %>% sf::st_transform(epsg_code))
+# stidf_rte2 <- STIDF(sp_rte2, df.rte2$tm, df.rte2)
+# track_rte2 <- STPtrajectories::STP_Track(Track(stidf_rte2), 25)
 
 
 ln10 <- make_line(sf::st_coordinates(df.rte10$pt)) %>% sf::st_sfc(crs=4326)
 # df.tmp <- df.dat %>% 
 #   group_by(idx_tr) %>% 
 #   summarise(ln = make_line(sf::st_coordinates(pt)) %>% sf::st_sfc(crs=4326))
-p1 <- #df.dat %>% #df.tmp[sample(nrow(df.tmp),10),] %>%
+p.path <- #df.dat %>% #df.tmp[sample(nrow(df.tmp),10),] %>%
   ggplot() +
-  geom_sf(data=us, mapping=aes(geometry=geometry), fill="grey99", color="grey75", size=0.2) +
+  geom_sf(data=us, mapping=aes(geometry=geometry), fill="cornsilk", color="grey75", size=0.2) +
   #geom_sf(aes(geometry=pt), alpha=0.3, color="grey65", size=0.5) +
   geom_sf(data=ln, aes(geometry=geometry)) +
   geom_sf(data=PPA_track_rte, mapping=aes(geometry=geometry), alpha=0.5, color="grey75") +
@@ -463,42 +468,170 @@ p1 <- #df.dat %>% #df.tmp[sample(nrow(df.tmp),10),] %>%
   theme_void()
 ```
 
-```{r}
-mtg <- alibi_query(track_rte, track_rte2, stop_if_true=FALSE, return_PIA=TRUE)
-d <- lapply(1:length(mtg), function(i){
-  if (!is.null(mtg[[i]]$PIA)) {
-    data.frame(geometry = mtg[[i]]$PIA %>% sf::st_as_sfc(),
-               trk11    = mtg[[i]]$STP_track1[1],
-               trk12    = mtg[[i]]$STP_track1[2],
-               trk21    = mtg[[i]]$STP_track2[1],
-               trk22    = mtg[[i]]$STP_track2[2],
-               tm1      = mtg[[i]]$meeting_time[1],
-               tm2      = mtg[[i]]$meeting_time[2])
-  }
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+## This takes a long time to run, so run once and save a file
+d.mtg <- alibi_query(track_rte, track_rte10, stop_if_true=FALSE) ##, stop_if_true=FALSE, return_PIA=TRUE)
+
+## The function returns a weird object so we need to extract info into a useful format
+# d <- lapply(1:length(mtg), function(i){
+#   if (!is.null(mtg[[i]]$PIA)) {
+#     data.frame(geometry = mtg[[i]]$PIA %>% sf::st_as_sfc(),
+#                trk11    = mtg[[i]]$STP_track1[1],
+#                trk12    = mtg[[i]]$STP_track1[2],
+#                trk21    = mtg[[i]]$STP_track2[1],
+#                trk22    = mtg[[i]]$STP_track2[2],
+#                tm1      = mtg[[i]]$meeting_time[1],
+#                tm2      = mtg[[i]]$meeting_time[2])
+#   }
+# })
+# df.mtg <- do.call(rbind, d)
+
+## Save to a file
+#saveRDS(df.mtg, "data/df_mtg.rds")
+
+d <- lapply(1:length(d.mtg), function(i){
+  a <- d.mtg[[i]]
+  data.frame(track1 = a$STP_track1,
+             track2 = a$STP_track2)
 })
-df.mtg <- do.call(rbind, d)
-saveRDS(df.mtg, "data/df_mtg.rds")
+df.mtg <- do.call(rbind,d)
+
+## There is probably a better way to do this but...
+trk1 <- unique(df.mtg$track1) %>% sort()
+sp_rte_x <- sf::as_Spatial(df.rte$pt[trk1] %>% sf::st_transform(epsg_code))
+stidf_rte_x <- STIDF(sp_rte_x, df.rte$tm[trk1], df.rte[trk1,])
+track_rte_x <- STPtrajectories::STP_Track(Track(stidf_rte_x), 25)
+PPA_track_rte_x <- PPA(track_rte_x) %>% sf::st_as_sf() %>% sf::st_transform(4326)
+
+trk2 <- unique(df.mtg$track2) %>% sort()
+sp_rte_x2 <- sf::as_Spatial(df.rte10$pt[trk2] %>% sf::st_transform(epsg_code))
+stidf_rte_x2 <- STIDF(sp_rte_x2, df.rte10$tm[trk2], df.rte10[trk2,])
+track_rte_x2 <- STPtrajectories::STP_Track(Track(stidf_rte_x2), 20)
+PPA_track_rte_x2 <- PPA(track_rte_x2) %>% sf::st_as_sf() %>% sf::st_transform(4326)
+
+t_min <- max(c(min(df.rte$tm[trk1]), min(df.rte10$tm[trk2])))
+t_max <- min(c(max(df.rte$tm[trk1]), max(df.rte10$tm[trk2])))
+```
+
+The alibi query uses the spatial intersection of two trajectories to determine whether they may have been at the same place at the same time, based on the mathematical approach described [here](https://www.tandfonline.com/doi/abs/10.1080/13658810902967397).  In the present case, we create a new route from Fargo, ND to Miami, FL, starting at noon on 01-JUL and traveling at an average speed of 30 km/h.  Given the two paths, the alibi query helps us determine a time period when the two trajectories may have intersected.  The chart below shows PPAs associated with the time periods of interest, with the darker shade representing the potential area of overlap.  In other words given what we know about the two paths, if these individuals met up at some point they likely did so within the dark red region some time between `r t_min` and `t_max`.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, out.width="48%", fig.align="center"}
+# df.mtg <- readr::read_rds("data/df_mtg.rds") %>%
+#   mutate(geometry = sf::st_transform(geometry, 4326))
+
+p.mtg <- ggplot() +
+  geom_sf(data=us, mapping=aes(geometry=geometry), fill="cornsilk", color="grey75", size=0.2) +
+  geom_sf(data=ln, aes(geometry=geometry)) +
+  geom_sf(data=ln10, aes(geometry=geometry)) +
+  geom_sf(data=PPA_track_rte_x, mapping=aes(geometry=geometry), fill="firebrick",alpha=0.25, color=NA) + 
+  geom_sf(data=PPA_track_rte_x2, mapping=aes(geometry=geometry), fill="firebrick", alpha=0.25, color=NA) +
+  theme_void()
+
+p.mtg
+```
+
+
+### Potential Stay Time
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Coords for  Fargo, ND
+slc <- osmdata::getbb("Salt Lake City, UT", format_out="sf_polygon") 
+pt_slc <- slc$geometry %>% sf::st_centroid() %>% sf::st_as_sf()
+buf_slc <- pt_slc$x[1] %>% sf::st_transform(epsg_code) %>% sf::st_buffer(50000) %>% sf::as_Spatial()
+
+d.stay <- STPtrajectories::potential_stay(track_rte, buf_slc)
+nm <- names(d.stay)
+d <- lapply(1:length(d.stay), function(i){
+  data.frame(nm  = nm[i],
+             idx = readr::parse_number(nm[i]) %>% as.integer(),
+             tm1 = d.stay[[i]][1],
+             tm2 = d.stay[[i]][2])
+})
+df.stay <- do.call(rbind,d)
+
+
+## There is probably a better way to do this but...
+trkz <- unique(df.stay$idx) %>% sort()
+sp_rte_z <- sf::as_Spatial(df.rte$pt[trkz] %>% sf::st_transform(epsg_code))
+stidf_rte_z <- STIDF(sp_rte_z, df.rte$tm[trkz], df.rte[trkz,])
+track_rte_z <- STPtrajectories::STP_Track(Track(stidf_rte_z), 25)
+PPA_track_rte_z <- PPA(track_rte_z) %>% sf::st_as_sf() %>% sf::st_transform(4326)
+
+t_min <- min(df.rte$tm[trkz])
+t_max <- max(df.rte$tm[trkz])
+```
+
+With the information gathered above, we can determine a time interval in which a given trajectory intersects with a particular location.  For example, I'm curious when our original trajectory might pass within 50 km of Salt Lake City.  The chart below shows a 50-km buffer around Salt Lake City, with the PPAs associated with the time period that the individual may have been within this buffer.  The time period is `r t_min` to `r t_max`.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, out.width="48%", fig.align="center"}
+slc_buffer <- buf_slc %>% sf::st_as_sf() %>%
+  mutate(geometry = sf::st_transform(geometry, 4326))
+
+p.stay <- ggplot() +
+  geom_sf(data=us, mapping=aes(geometry=geometry), fill="cornsilk", color="grey75", size=0.2) +
+  geom_sf(data=ln, aes(geometry=geometry)) +
+  geom_sf(data=PPA_track_rte_z, mapping=aes(geometry=geometry), fill="firebrick",alpha=0.25, color=NA) + 
+  geom_sf(data=slc_buffer, mapping=aes(geometry=geometry), fill="grey65", alpha=0.25, color="grey25") +
+  theme_void()
+
+p.stay
+```
+
+
+### Adding uncertainty to space and time
+
+It is straightforward to recreate the Potential Path Area (PPA) above with uncertainty added to the time and position.  For the chart below, we add a position uncertainty of 10 km and a time uncertainty of 1 hour.  We also add an "activity time" of 20 minutes at each location. The result, as seen in the chart below, is that the PPA is porportionally larger. 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, out.width="48%", fig.align="center"}
+track_rte100 <- STPtrajectories::STP_Track(track = Track(stidf_rte), 
+                                           vmax  = 25, 
+                                           activity_time = 20,
+                                           location_uncertainty = 10000,
+                                           time_uncertainty = 60)
+PPA_track_rte100 <- PPA(track_rte100) %>% sf::st_as_sf() %>% sf::st_transform(4326)
+
+p.trk100 <- ggplot() +
+  geom_sf(data=us, mapping=aes(geometry=geometry), fill="cornsilk", color="grey75", size=0.2) +
+  geom_sf(data=ln, aes(geometry=geometry)) +
+  geom_sf(data=PPA_track_rte, mapping=aes(geometry=geometry), 
+          fill="grey75",alpha=0.5, color=NA) + 
+  geom_sf(data=PPA_track_rte100, mapping=aes(geometry=geometry), 
+          fill="firebrick", alpha=0.25, color="grey25", size=0.2) +
+  theme_void()
+
+p.trk100
 ```
 
 
 
-### Stay Time
 
-### Adding uncertainty in space and time
 <br>
 
 ## References
 
-[STPtrajectories GitHub page](https://github.com/markvregel/STPtrajectories)  
+<b>Primary References for this work</b>
 
-[STPtrajectories documentation](https://github.com/markvregel/STPtrajectories/blob/master/STPtrajectories.pdf)  
-
-[STPtrajectories vignette](http://htmlpreview.github.io/?https://raw.githubusercontent.com/markvregel/STPtrajectories/master/vignettes/STP_Tracks.html)
+The `STPtrajectories` R package:
+[GitHub page](https://github.com/markvregel/STPtrajectories), 
+[documentation](https://github.com/markvregel/STPtrajectories/blob/master/STPtrajectories.pdf), 
+[vignette](http://htmlpreview.github.io/?https://raw.githubusercontent.com/markvregel/STPtrajectories/master/vignettes/STP_Tracks.html)  
 
 [Time geography and space time prism](https://cpb-us-w2.wpmucdn.com/u.osu.edu/dist/a/390/files/2017/03/Miller-time-geography-and-space-time-prism-1rp3u1q.pdf), Miller, H. J. (2017)  
+
+[Lecture transcript from Torsten Hagerstrand](http://courses.washington.edu/cee500/What%20about%20people%20in%20regional%20science.pdf) (1970)  
+
+Analytic Solution for the alibi query: 
+[official](https://www.tandfonline.com/doi/abs/10.1080/13658810902967397), 
+[semantic scholar (for pdf)](https://www.semanticscholar.org/paper/An-analytic-solution-to-the-alibi-query-in-the-for-Kuijpers-Grimson/eecd8301548a50f15e100e0cdd7f132e5d17017d)  
+
+<br>
+
+<b>Other Interesting References</b>
 
 [Discovering spatial co-location patterns: A summary of results](https://www-users.cse.umn.edu/~shekhar/research/co-location.pdf), Shekhar & Huang  
 
 [Shashi Shekhar research page](https://www-users.cse.umn.edu/~shekhar/)  
 
 [Nice R Geo lecture materials](http://eda.seas.gwu.edu/2021-Spring/c12-maps.html)  
+
+
