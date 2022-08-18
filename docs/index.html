@@ -318,10 +318,8 @@ surrounding geohashes,</p>
 <div id="millers-space-time-prisms" class="section level2">
 <h2>Miller’s Space-Time Prisms</h2>
 <blockquote>
-<p>The space–time prism (STP) highlights the influence of space–time
-anchors on the ability to participate in flexible activities. The STP is
-the envelope of all possible space–time paths between known locations
-and times.</p>
+<p>The space-time prism is the envelope of all possible space–time paths
+between known locations and times.</p>
 </blockquote>
 <p>The R package <a
 href="https://github.com/markvregel/STPtrajectories">STPtrajectories</a>
@@ -367,7 +365,7 @@ random trajectory generated to fill gaps between the “known” points. We
 use this same process to simulate 500 hypothetical paths around the
 Great Lakes region, as displayed in the chart at right below. Here, the
 paths are rendered as dots so that the result is effectively a
-dot-density map depicting the likelihood that an individual travel
+dot-density map depicting the likelihood that an individual traveled
 through a given location. The result, according to Miller, is a
 bivariate multinomial distribution centered on each of the anchor
 points. Note that the density is noticeably smaller further from the
@@ -388,7 +386,7 @@ PPAs associated with the time periods of interest, with the darker shade
 representing the potential area of overlap. In other words given what we
 know about the two paths, if these individuals met up at some point they
 likely did so within the dark red region some time between 2022-07-03
-23:00:00 and <code>t_max</code>.</p>
+23:00:00 and 2022-07-04 21:23:00.</p>
 <p><img src="index_files/figure-html/unnamed-chunk-22-1.png" width="48%" style="display: block; margin: auto;" /></p>
 </div>
 <div id="potential-stay-time" class="section level3">
@@ -417,17 +415,20 @@ larger.</p>
 <h2>Conclusions</h2>
 <p>Several useful and interesting capabilities are made available with
 Miller’s space-time prisms, as implemented in the
-<code>STPtrajectories</code> R package. One drawback of the package is
-that is uses objects built on the older geospatial infrastructure from
-<code>sp</code> instead of the newer <code>sf</code>. It may be possible
-to update this, however since many of the package-defined objects are
-built from other objects defined in the <code>spacetime</code> package,
-this could be more challenging that it appears to be on the surface.</p>
+<code>STPtrajectories</code> R package.</p>
+<p>One potential drawback of the package is that is uses objects built
+on the older geospatial infrastructure from <code>sp</code> instead of
+the newer <code>sf</code>. It may be possible to update this, however
+since many of the package-defined objects are built from other objects
+defined in the <code>spacetime</code> package, this could be more
+challenging that it appears to be on the surface.</p>
 <p>There are several other approaches to trajectory mining in the
 literature that may be worth investigating, especially if there are
 already implementations available. See <em>Other Interesting
-References</em> in the References section below for more
-information.</p>
+References</em> in the References section below for more information.
+Additionally, there are variations of the present methodology that
+account for road networks and other constraints, which may be worth
+exploring.</p>
 <p><br></p>
 </div>
 <div id="references" class="section level2">

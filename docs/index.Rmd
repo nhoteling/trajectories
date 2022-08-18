@@ -310,8 +310,7 @@ p.prb
 
 ## Miller's Space-Time Prisms
 
-> The space–time prism (STP) highlights the influence of space–time anchors on the ability to
-> participate in flexible activities. The STP is the
+> The space-time prism is the
 > envelope of all possible space–time paths between
 > known locations and times.
 
@@ -352,7 +351,7 @@ p.ppa
 
 ### Random trajectory generator
 
-In the area chart above the region around the Great Lakes spans a large area because the "observed" points are spread further from one another.  This means that, at 55 mph, an individual can travel further afield between observed points.  Ignoring the presence or absence of roads, one can get an idea of the potential paths within this area with the random trajectory generator (RTG).  The RTG uses a _directed random walk_ (ie: a random walk with directional bias) to generate a path between anchor points.  The chart below at left shows a single random trajectory generated to fill gaps between the "known" points.  We use this same process to simulate 500 hypothetical paths around the Great Lakes region, as displayed in the chart at right below.  Here, the paths are rendered as dots so that the result is effectively a dot-density map depicting the likelihood that an individual travel through a given location.  The result, according to Miller, is a bivariate multinomial distribution centered on each of the anchor points.  Note that the density is noticeably smaller further from the markers, which represent observed locations.
+In the area chart above the region around the Great Lakes spans a large area because the "observed" points are spread further from one another.  This means that, at 55 mph, an individual can travel further afield between observed points.  Ignoring the presence or absence of roads, one can get an idea of the potential paths within this area with the random trajectory generator (RTG).  The RTG uses a _directed random walk_ (ie: a random walk with directional bias) to generate a path between anchor points.  The chart below at left shows a single random trajectory generated to fill gaps between the "known" points.  We use this same process to simulate 500 hypothetical paths around the Great Lakes region, as displayed in the chart at right below.  Here, the paths are rendered as dots so that the result is effectively a dot-density map depicting the likelihood that an individual traveled through a given location.  The result, according to Miller, is a bivariate multinomial distribution centered on each of the anchor points.  Note that the density is noticeably smaller further from the markers, which represent observed locations.
 
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, echo=FALSE}
@@ -515,7 +514,7 @@ t_min <- max(c(min(df.rte$tm[trk1]), min(df.rte10$tm[trk2])))
 t_max <- min(c(max(df.rte$tm[trk1]), max(df.rte10$tm[trk2])))
 ```
 
-The alibi query uses the spatial intersection of two trajectories to determine whether they may have been at the same place at the same time, based on the mathematical approach described [here](https://www.tandfonline.com/doi/abs/10.1080/13658810902967397).  In the present case, we create a new route from Fargo, ND to Miami, FL, starting at noon on 01-JUL and traveling at an average speed of 30 km/h.  Given the two paths, the alibi query helps us determine a time period when the two trajectories may have intersected.  The chart below shows PPAs associated with the time periods of interest, with the darker shade representing the potential area of overlap.  In other words given what we know about the two paths, if these individuals met up at some point they likely did so within the dark red region some time between `r t_min` and `t_max`.
+The alibi query uses the spatial intersection of two trajectories to determine whether they may have been at the same place at the same time, based on the mathematical approach described [here](https://www.tandfonline.com/doi/abs/10.1080/13658810902967397).  In the present case, we create a new route from Fargo, ND to Miami, FL, starting at noon on 01-JUL and traveling at an average speed of 30 km/h.  Given the two paths, the alibi query helps us determine a time period when the two trajectories may have intersected.  The chart below shows PPAs associated with the time periods of interest, with the darker shade representing the potential area of overlap.  In other words given what we know about the two paths, if these individuals met up at some point they likely did so within the dark red region some time between `r t_min` and `r t_max`.
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, out.width="48%", fig.align="center"}
 # df.mtg <- readr::read_rds("data/df_mtg.rds") %>%
@@ -607,9 +606,11 @@ p.trk100
 
 ## Conclusions
 
-Several useful and interesting capabilities are made available with Miller's space-time prisms, as implemented in the `STPtrajectories` R package.  One drawback of the package is that is uses objects built on the older geospatial infrastructure from `sp` instead of the newer `sf`.  It may be possible to update this, however since many of the package-defined objects are built from other objects defined in the `spacetime` package, this could be more challenging that it appears to be on the surface.
+Several useful and interesting capabilities are made available with Miller's space-time prisms, as implemented in the `STPtrajectories` R package.  
 
-There are several other approaches to trajectory mining in the literature that may be worth investigating, especially if there are already implementations available.  See _Other Interesting References_ in the References section below for more information.
+One potential drawback of the package is that is uses objects built on the older geospatial infrastructure from `sp` instead of the newer `sf`.  It may be possible to update this, however since many of the package-defined objects are built from other objects defined in the `spacetime` package, this could be more challenging that it appears to be on the surface.
+
+There are several other approaches to trajectory mining in the literature that may be worth investigating, especially if there are already implementations available.  See _Other Interesting References_ in the References section below for more information.  Additionally, there are variations of the present methodology that account for road networks and other constraints, which may be worth exploring.
 
 <br>
 
