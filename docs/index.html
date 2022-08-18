@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Nathan Hoteling" />
+
+
+<title>Routing and Trajectories</title>
+
+<script src="site_libs/header-attrs-2.11/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/yeti.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html"></a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Routing and Trajectories</h1>
+<h4 class="author">Nathan Hoteling</h4>
+<h4 class="date">August 2022</h4>
+
+</div>
+
+
+<hr>
+<p><br></p>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>This write-up includes an investigation into trajectory mining with
+spatio-temporal data, primarily with techniques derived from <a
+href="https://cpb-us-w2.wpmucdn.com/u.osu.edu/dist/a/390/files/2017/03/Miller-time-geography-and-space-time-prism-1rp3u1q.pdf">Miller’s
+space-time prisms</a> (STPs) and implemented with the
+<code>STPtrajectories</code> <a
+href="https://github.com/markvregel/STPtrajectories">R package</a>.</p>
+<p><br></p>
+</div>
+<div id="data-simulation" class="section level2">
+<h2>Data Simulation</h2>
+<p>A simulated dataset is generated from the travel route between
+Portland, OR and Portland, ME. City coordinates are obtained from
+OpenStreetMap via <code>osmdata</code> and the route between cities from
+<code>osrm</code>. Five hundred imaginary trips are simulated from this
+route by sampling from a Normal distribution with centroid value being
+the point coordinates. The resulting point cloud is displayed below,
+with the original path depicted as a black line.</p>
+<p><br></p>
+<p><img src="index_files/figure-html/unnamed-chunk-5-1.png" width="48%" style="display: block; margin: auto;" /></p>
+<p><br> <br></p>
+</div>
+<div id="monte-carlo-from-scratch" class="section level2">
+<h2>Monte Carlo from scratch</h2>
+<p>We can use the 500 imaginary trips to estimate the original route via
+monte carlo. To do this, we aggregate the point data by geohash (via the
+<code>h3</code> package), and the model uses the <em>current</em>
+geohash to predict the <em>next</em> geohash. The “model” in this case
+is really just a collection of geohash-pairs plus the number of times
+this pair was seen in the data. To carry out the monte carlo process, we
+start at one end of the route and randomly sample from geohash pairs to
+determine the next grid location, until the process is completed (ie: we
+have arrived at the other end of the route, or some maximum number of
+iterations has been reached). The procedure is repeated many times so
+that we have a collection of paths.</p>
+<p><img src="index_files/figure-html/unnamed-chunk-11-1.png" width="48%" style="display: block; margin: auto;" /></p>
+<p><br></p>
+<div id="next-hex-probabilities" class="section level3">
+<h3>Next-Hex Probabilities</h3>
+<p>More interesting than the gross monte carlo results described above
+is a determination of the “next-hex probabilities”. In other words,
+given some current position, what does the probability distribution look
+like for each of the surrounding positions? This is fairly
+straightforward to implement with the model developed in the section
+above. In the example below, the current-hex is depicted in black, and
+the next-hex probabilities are represented by fill color in the
+surrounding geohashes,</p>
+<p><img src="index_files/figure-html/unnamed-chunk-13-1.png" width="48%" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="millers-space-time-prisms" class="section level2">
+<h2>Miller’s Space-Time Prisms</h2>
+<blockquote>
+<p>The space–time prism (STP) highlights the influence of space–time
+anchors on the ability to participate in flexible activities. The STP is
+the envelope of all possible space–time paths between known locations
+and times.</p>
+</blockquote>
+<p>The R package <a
+href="https://github.com/markvregel/STPtrajectories">STPtrajectories</a>
+includes an implementation of <a
+href="https://cpb-us-w2.wpmucdn.com/u.osu.edu/dist/a/390/files/2017/03/Miller-time-geography-and-space-time-prism-1rp3u1q.pdf">Miller’s
+space time prism</a> as well as some related features like a random
+trajectory generator, potential path area, and the alibi query. Using
+the package <a
+href="http://htmlpreview.github.io/?https://raw.githubusercontent.com/markvregel/STPtrajectories/master/vignettes/STP_Tracks.html">vignette</a>
+as a guide, we illustrate each of these features here within the context
+of the example above.</p>
+<div id="potential-path-area" class="section level3">
+<h3>Potential Path Area</h3>
+<p>The potential path area (PPA) encompasses the region that can
+feasibly have been traversed between observed points, based on some
+maximum speed. It is the spatial footprint of the space-time prism.
+Given a maximum average speed of around 25 m/s (~55 mph), the PPA for
+our path between Portlands is given in the chart below. Notice that this
+looks quite different from the results presented above from the monte
+carlo simulation. There is a good reason for this: the regions depicted
+operate on the assumption that data points represent observables and the
+regions represent how far an individual may have traveled between
+observed points, based on the maximum average speed between these
+points. In contrast, the monte carlo results depicted above incorporate
+uncertainty on the observed positions, but ignore any variations between
+points. In fact, these methods are complementary, in the sense that one
+might consider generating PPAs from the monte carlo paths, and then
+combining the results together into an overall path probability
+distribution.</p>
+<p><img src="index_files/figure-html/unnamed-chunk-15-1.png" width="48%" style="display: block; margin: auto;" /></p>
+</div>
+<div id="random-trajectory-generator" class="section level3">
+<h3>Random trajectory generator</h3>
+<p>In the area chart above the region around the Great Lakes spans a
+large area because the “observed” points are spread further from one
+another. This means that, at 55 mph, an individual can travel further
+afield between observed points. Ignoring the presence or absence of
+roads, one can get an idea of the potential paths within this area with
+the random trajectory generator (RTG). The RTG uses a <em>directed
+random walk</em> (ie: a random walk with directional bias) to generate a
+path between anchor points. The chart below at left shows a single
+random trajectory generated to fill gaps between the “known” points. We
+use this same process to simulate 500 hypothetical paths around the
+Great Lakes region, as displayed in the chart at right below. Here, the
+paths are rendered as dots so that the result is effectively a
+dot-density map depicting the likelihood that an individual travel
+through a given location. The result, according to Miller, is a
+bivariate multinomial distribution centered on each of the anchor
+points. Note that the density is noticeably smaller further from the
+markers, which represent observed locations.</p>
+<p><img src="index_files/figure-html/unnamed-chunk-18-1.png" width="48%" /><img src="index_files/figure-html/unnamed-chunk-18-2.png" width="48%" /></p>
+</div>
+<div id="the-alibi-query" class="section level3">
+<h3>The Alibi Query</h3>
+<p>The alibi query uses the spatial intersection of two trajectories to
+determine whether they may have been at the same place at the same time,
+based on the mathematical approach described <a
+href="https://www.tandfonline.com/doi/abs/10.1080/13658810902967397">here</a>.
+In the present case, we create a new route from Fargo, ND to Miami, FL,
+starting at noon on 01-JUL and traveling at an average speed of 30 km/h.
+Given the two paths, the alibi query helps us determine a time period
+when the two trajectories may have intersected. The chart below shows
+PPAs associated with the time periods of interest, with the darker shade
+representing the potential area of overlap. In other words given what we
+know about the two paths, if these individuals met up at some point they
+likely did so within the dark red region some time between 2022-07-03
+23:00:00 and <code>t_max</code>.</p>
+<p><img src="index_files/figure-html/unnamed-chunk-22-1.png" width="48%" style="display: block; margin: auto;" /></p>
+</div>
+<div id="potential-stay-time" class="section level3">
+<h3>Potential Stay Time</h3>
+<p>With the information gathered above, we can determine a time interval
+in which a given trajectory intersects with a particular location. For
+example, I’m curious when our original trajectory might pass within 50
+km of Salt Lake City. The chart below shows a 50-km buffer around Salt
+Lake City, with the PPAs associated with the time period that the
+individual may have been within this buffer. The time period is
+2022-07-02 01:08:00 to 2022-07-02 07:53:00.</p>
+<p><img src="index_files/figure-html/unnamed-chunk-24-1.png" width="48%" style="display: block; margin: auto;" /></p>
+</div>
+<div id="adding-uncertainty-to-space-and-time" class="section level3">
+<h3>Adding uncertainty to space and time</h3>
+<p>It is straightforward to recreate the Potential Path Area (PPA) above
+with uncertainty added to the time and position. For the chart below, we
+add a position uncertainty of 10 km and a time uncertainty of 1 hour. We
+also add an “activity time” of 20 minutes at each location. The result,
+as seen in the chart below, is that the PPA is porportionally
+larger.</p>
+<p><img src="index_files/figure-html/unnamed-chunk-25-1.png" width="48%" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="conclusions" class="section level2">
+<h2>Conclusions</h2>
+<p>Several useful and interesting capabilities are made available with
+Miller’s space-time prisms, as implemented in the
+<code>STPtrajectories</code> R package. One drawback of the package is
+that is uses objects built on the older geospatial infrastructure from
+<code>sp</code> instead of the newer <code>sf</code>. It may be possible
+to update this, however since many of the package-defined objects are
+built from other objects defined in the <code>spacetime</code> package,
+this could be more challenging that it appears to be on the surface.</p>
+<p>There are several other approaches to trajectory mining in the
+literature that may be worth investigating, especially if there are
+already implementations available. See <em>Other Interesting
+References</em> in the References section below for more
+information.</p>
+<p><br></p>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<p><br></p>
+<p><b>Primary References for this work</b></p>
+<p>The <code>STPtrajectories</code> R package: <a
+href="https://github.com/markvregel/STPtrajectories">GitHub page</a>, <a
+href="https://github.com/markvregel/STPtrajectories/blob/master/STPtrajectories.pdf">documentation</a>,
+<a
+href="http://htmlpreview.github.io/?https://raw.githubusercontent.com/markvregel/STPtrajectories/master/vignettes/STP_Tracks.html">vignette</a></p>
+<p><a
+href="https://cpb-us-w2.wpmucdn.com/u.osu.edu/dist/a/390/files/2017/03/Miller-time-geography-and-space-time-prism-1rp3u1q.pdf">Time
+geography and space time prism</a>, Miller, H. J. (2017)</p>
+<p><a
+href="http://courses.washington.edu/cee500/What%20about%20people%20in%20regional%20science.pdf">What
+About People in Regional Science</a>, Lecture transcript from Torsten
+Hagerstrand (1970) ~ origin of time geography</p>
+<p>Analytic Solution for the alibi query: <a
+href="https://www.tandfonline.com/doi/abs/10.1080/13658810902967397">official</a>,
+<a
+href="https://www.semanticscholar.org/paper/An-analytic-solution-to-the-alibi-query-in-the-for-Kuijpers-Grimson/eecd8301548a50f15e100e0cdd7f132e5d17017d">semantic
+scholar (for pdf)</a></p>
+<p><br></p>
+<p><b>Other Interesting References</b></p>
+<p><a
+href="https://www-users.cse.umn.edu/~shekhar/talk/2014/changeFtprtDtcn.pdf">Spatio-temporal
+footprint change discovery:</a></p>
+<p><a
+href="https://www.researchgate.net/publication/220351277_Exploring_movement_-_similarity_analysis_of_moving_objects">Exploring
+Movement: Similarity Analysis of Moving Objects</a> (2009)</p>
+<p><a
+href="https://www.researchgate.net/publication/221589564_Density_based_co-location_pattern_discovery">Density-based
+co-location pattern discovery</a> (2008)</p>
+<p><a
+href="https://www.researchgate.net/publication/221589509_A_neighborhood_graph_based_approach_to_regional_co-location_pattern_discovery_A_summary_of_results">A
+neighborhood graph based approach to regional co-location pattern
+discovery</a> (2011)</p>
+<p><a
+href="https://www-users.cse.umn.edu/~shekhar/research/co-location.pdf">Discovering
+spatial co-location patterns: A summary of results</a>, Shekhar &amp;
+Huang</p>
+<p><a href="https://www-users.cse.umn.edu/~shekhar/">Shashi Shekhar
+research page</a></p>
+<p><a href="http://eda.seas.gwu.edu/2021-Spring/c12-maps.html">Nice R
+Geo lecture materials</a></p>
+<p>TODO: 3D plots via <a
+href="https://www.tylermw.com/3d-ggplots-with-rayshader/">rayshader</a></p>
+<br> <br>
+<hr>
+<p><br> <br> <br></p>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

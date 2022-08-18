@@ -1,9 +1,10 @@
 ---
 title: "Routing and Trajectories"
 author: "Nathan Hoteling"
-date: '2022-08-12'
+date: "`r format(Sys.time(), '%B %Y')`"
 output: html_document
 ---
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -29,7 +30,7 @@ library(rnaturalearthhires)   # same as above
 library(spacetime)
 library(STPtrajectories)
 
-source("R/utils.R")
+source("../R/utils.R")
 ```
 
 ```{r data, echo=FALSE, message=FALSE, warning=FALSE}
@@ -40,10 +41,10 @@ source("R/utils.R")
 # 
 # saveRDS(us_states_cont, "data/us_states_cont.rds")
 
-us_states_cont <- readRDS("data/us_states_cont.rds")
+us_states_cont <- readRDS("../data/us_states_cont.rds")
 us <- sf::st_union(us_states_cont)
 
-df.rte <- readRDS("data/df_rte.rds")
+df.rte <- readRDS("../data/df_rte.rds")
 ```
 
 
@@ -103,7 +104,7 @@ for (i in 2:nrow(df.rte)) {
   
 
 
-saveRDS(df.rte, "data/df_rte.rds")
+saveRDS(df.rte, "../data/df_rte.rds")
 ```
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
@@ -379,14 +380,14 @@ d <- lapply(1:500, function(i){
 })
 df.ln <- data.frame(ln = sf::st_as_sfc(d, crs=4326))
 
-saveRDS(df.rtg, "data/df_rtg_pt.rds")
-saveRDS(df.ln,  "data/df_rtg_ln.rds")
+saveRDS(df.rtg, "../data/df_rtg_pt.rds")
+saveRDS(df.ln,  "../data/df_rtg_ln.rds")
 ```
 
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, out.width="48%", fig.show="hold"}
-df.rtg1 <- readRDS("data/df_rtg_pt.rds")
-df.rtg2 <- readRDS("data/df_rtg_ln.rds")
+df.rtg1 <- readRDS("../data/df_rtg_pt.rds")
+df.rtg2 <- readRDS("../data/df_rtg_ln.rds")
 p.tst1 <- p.ppa + 
   geom_sf(data=df.rtg1, mapping=aes(geometry=geometry), color="firebrick", size=0.1, alpha=0.25) +
   geom_sf(data=df.rte2, mapping=aes(geometry=pt), color="grey25")
@@ -436,13 +437,13 @@ for (i in 2:nrow(df.rte10)) {
     }
 
 ## save file  
-saveRDS(df.rte10, "data/df_rte10.rds")
+saveRDS(df.rte10, "../data/df_rte10.rds")
 ```
 
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ## Read the file and convert to a Potential Path Area
-df.rte10 <- readRDS("data/df_rte10.rds")
+df.rte10 <- readRDS("../data/df_rte10.rds")
 sp_rte10 <- sf::as_Spatial(df.rte10$pt %>% sf::st_transform(epsg_code))
 stidf_rte10 <- STIDF(sp_rte10, df.rte10$tm, df.rte10)
 track_rte10 <- STPtrajectories::STP_Track(Track(stidf_rte10), 20)
@@ -604,11 +605,17 @@ p.trk100
 ```
 
 
+## Conclusions
 
+Several useful and interesting capabilities are made available with Miller's space-time prisms, as implemented in the `STPtrajectories` R package.  One drawback of the package is that is uses objects built on the older geospatial infrastructure from `sp` instead of the newer `sf`.  It may be possible to update this, however since many of the package-defined objects are built from other objects defined in the `spacetime` package, this could be more challenging that it appears to be on the surface.
+
+There are several other approaches to trajectory mining in the literature that may be worth investigating, especially if there are already implementations available.  See _Other Interesting References_ in the References section below for more information.
 
 <br>
 
 ## References
+
+<br>
 
 <b>Primary References for this work</b>
 
@@ -619,7 +626,7 @@ The `STPtrajectories` R package:
 
 [Time geography and space time prism](https://cpb-us-w2.wpmucdn.com/u.osu.edu/dist/a/390/files/2017/03/Miller-time-geography-and-space-time-prism-1rp3u1q.pdf), Miller, H. J. (2017)  
 
-[Lecture transcript from Torsten Hagerstrand](http://courses.washington.edu/cee500/What%20about%20people%20in%20regional%20science.pdf) (1970)  
+[What About People in Regional Science](http://courses.washington.edu/cee500/What%20about%20people%20in%20regional%20science.pdf), Lecture transcript from Torsten Hagerstrand (1970) ~ origin of time geography  
 
 Analytic Solution for the alibi query: 
 [official](https://www.tandfonline.com/doi/abs/10.1080/13658810902967397), 
@@ -629,10 +636,34 @@ Analytic Solution for the alibi query:
 
 <b>Other Interesting References</b>
 
+[Spatio-temporal footprint change discovery: ](https://www-users.cse.umn.edu/~shekhar/talk/2014/changeFtprtDtcn.pdf)
+
+[Exploring Movement: Similarity Analysis of Moving Objects](https://www.researchgate.net/publication/220351277_Exploring_movement_-_similarity_analysis_of_moving_objects) (2009)  
+
+[Density-based co-location pattern discovery](https://www.researchgate.net/publication/221589564_Density_based_co-location_pattern_discovery) (2008)
+
+[A neighborhood graph based approach to regional co-location pattern discovery](https://www.researchgate.net/publication/221589509_A_neighborhood_graph_based_approach_to_regional_co-location_pattern_discovery_A_summary_of_results) (2011)
+
 [Discovering spatial co-location patterns: A summary of results](https://www-users.cse.umn.edu/~shekhar/research/co-location.pdf), Shekhar & Huang  
 
 [Shashi Shekhar research page](https://www-users.cse.umn.edu/~shekhar/)  
 
 [Nice R Geo lecture materials](http://eda.seas.gwu.edu/2021-Spring/c12-maps.html)  
+
+TODO: 3D plots via [rayshader](https://www.tylermw.com/3d-ggplots-with-rayshader/)  
+
+<br>
+<br>
+<hr>
+<br>
+<br>
+<br>
+
+
+
+
+
+
+
 
 
